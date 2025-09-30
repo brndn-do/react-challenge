@@ -1,5 +1,6 @@
 import Banner from "./components/Banner";
 import CourseList from "./components/CourseList";
+import './App.css';
 
 const schedule = {
   "title": "CS Courses for 2018-2019",

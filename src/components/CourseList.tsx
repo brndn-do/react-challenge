@@ -13,7 +13,13 @@ const CourseList = ({ courses }: CourseListProps) => {
   return (
     <ul>
       {Object.values(courses).map((course) => {
-        return <li>{`${course.term} CS ${course.number}: ${course.title}`}</li>;
+        return (
+          <li>
+            <h6 className="term-number">{`${course.term} CS ${course.number}`}</h6>
+            <p className="title">{`${course.title}`}</p>
+            <p className="meets">{`${course.meets}`}</p>
+          </li>
+        );
       })}
     </ul>
   );
