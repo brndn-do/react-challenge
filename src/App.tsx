@@ -1,42 +1,63 @@
 import Banner from "./components/Banner";
 import CourseList from "./components/CourseList";
-import './App.css';
+import "./App.css";
+import { useEffect, useState } from "react";
 
-const schedule = {
-  "title": "CS Courses for 2018-2019",
-  "courses": {
-    "F101" : {
-      "term": "Fall",
-      "number": "101",
-      "meets" : "MWF 11:00-11:50",
-      "title" : "Computer Science: Concepts, Philosophy, and Connections"
-    },
-    "F110" : {
-      "term": "Fall",
-      "number": "110",
-      "meets" : "MWF 10:00-10:50",
-      "title" : "Intro Programming for non-majors"
-    },
-    "S313" : {
-      "term": "Spring",
-      "number": "313",
-      "meets" : "TuTh 15:30-16:50",
-      "title" : "Tangible Interaction Design and Learning"
-    },
-    "S314" : {
-      "term": "Spring",
-      "number": "314",
-      "meets" : "TuTh 9:30-10:50",
-      "title" : "Tech & Human Interaction"
-    }
-  }
-};
+const COURSES_URL =
+  "https://courses.cs.northwestern.edu/394/guides/data/cs-courses.php";
 
 const App = () => {
-  return (
+  const [result, setResult] = useState({ title: "Courses", courses: {} });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchCourses = async () => {
+      try {
+        const res = await fetch(COURSES_URL, { signal: controller.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setResult(data);
+      } catch (err) {
+        // Abort throws a DOMException with name === "AbortError" in browsers
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+
+        if (err instanceof Error) {
+          setError(err);
+        } else {
+          // non-Error thrown (string, object, etc.) — normalize to Error
+          setError(new Error(String(err)));
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+    return () => controller.abort();
+  }, []);
+
+  return loading ? (
     <>
-      <Banner title={schedule.title} />
-      <CourseList courses={schedule.courses} />
+      <Banner title="Loading courses…" />
+      <div style={{ padding: 16 }}>Loading courses…</div>
+    </>
+  ) : error ? (
+    <>
+      <Banner title="Error loading courses" />
+      <div style={{ padding: 16, color: "crimson" }}>
+        Could not load courses: {error.message}
+      </div>
+      <CourseList courses={result.courses} />
+    </>
+  ) : (
+    <>
+      <Banner title={result.title} />
+      <CourseList courses={result.courses} />
     </>
   );
 };
