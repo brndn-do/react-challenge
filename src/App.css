@@ -42,3 +42,7 @@ button {
   border-radius: 0.25rem;
   background: #eee;
 }
+
+.selected {
+  background: yellow;
+}
