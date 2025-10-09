@@ -7,14 +7,16 @@ interface Course {
 
 interface CourseListProps {
   courses: { [key: string]: Course };
+  term: string;
 }
 
-const CourseList = ({ courses }: CourseListProps) => {
+const CourseList = ({ courses, term }: CourseListProps) => {
+  const filteredCourses = Object.values(courses).filter((c) => c.term === term);
   return (
     <ul>
-      {Object.values(courses).map((course) => {
+      {filteredCourses.map((course) => {
         return (
-          <li>
+          <li key={course.number}>
             <h6 className="term-number">{`${course.term} CS ${course.number}`}</h6>
             <p className="title">{`${course.title}`}</p>
             <p className="meets">{`${course.meets}`}</p>

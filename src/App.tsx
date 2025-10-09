@@ -1,42 +1,55 @@
-import Banner from "./components/Banner";
-import CourseList from "./components/CourseList";
+import Banner from './components/Banner';
 import './App.css';
+import { useState, useEffect } from 'react';
+import TermPage from './components/TermPage';
 
-const schedule = {
-  "title": "CS Courses for 2018-2019",
-  "courses": {
-    "F101" : {
-      "term": "Fall",
-      "number": "101",
-      "meets" : "MWF 11:00-11:50",
-      "title" : "Computer Science: Concepts, Philosophy, and Connections"
-    },
-    "F110" : {
-      "term": "Fall",
-      "number": "110",
-      "meets" : "MWF 10:00-10:50",
-      "title" : "Intro Programming for non-majors"
-    },
-    "S313" : {
-      "term": "Spring",
-      "number": "313",
-      "meets" : "TuTh 15:30-16:50",
-      "title" : "Tangible Interaction Design and Learning"
-    },
-    "S314" : {
-      "term": "Spring",
-      "number": "314",
-      "meets" : "TuTh 9:30-10:50",
-      "title" : "Tech & Human Interaction"
-    }
-  }
-};
+interface CourseData {
+  title: string;
+  courses: {
+    [key: string]: {
+      term: string;
+      number: string;
+      meets: string;
+      title: string;
+    };
+  };
+}
 
 const App = () => {
+  const [data, setData] = useState<CourseData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          'https://courses.cs.northwestern.edu/394/guides/data/cs-courses.php'
+        );
+        if (!response.ok) {
+          throw new Error(`ERROR: status: ${response.status}`);
+        }
+        const json = await response.json();
+        setData(json);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  let bannerTitle = 'CS Courses';
+  if (loading) bannerTitle = 'Loading...';
+  else if (error) bannerTitle = `Error: ${error.message}`;
+  else if (data) bannerTitle = data.title;
+
   return (
     <>
-      <Banner title={schedule.title} />
-      <CourseList courses={schedule.courses} />
+      <Banner title={bannerTitle} />
+      <TermPage courses={data?.courses ?? {}}/>
     </>
   );
 };
