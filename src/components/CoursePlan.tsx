@@ -1,5 +1,4 @@
 
-import React from 'react';
 import './CoursePlan.css';
 
 interface Course {
@@ -15,7 +14,7 @@ interface CoursePlanProps {
   onClose: () => void;
 }
 
-const CoursePlan: React.FC<CoursePlanProps> = ({ selected, onClose }) => {
+const CoursePlan = ({ selected, onClose }: CoursePlanProps) => {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
