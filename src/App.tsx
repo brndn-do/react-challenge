@@ -2,6 +2,7 @@ import Banner from './components/Banner';
 import './App.css';
 import { useState, useEffect } from 'react';
 import TermPage from './components/TermPage';
+import CoursePlan from './components/CoursePlan';
 
 interface CourseData {
   title: string;
@@ -19,6 +20,8 @@ const App = () => {
   const [data, setData] = useState<CourseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [showCoursePlan, setShowCoursePlan] = useState(false);
+  const [selected, setSelected] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,10 +49,17 @@ const App = () => {
   else if (error) bannerTitle = `Error: ${error.message}`;
   else if (data) bannerTitle = data.title;
 
+  const toggleCoursePlan = () => setShowCoursePlan(!showCoursePlan);
+
+  const selectedCourses = Object.entries(data?.courses ?? {})
+    .filter(([id]) => selected.includes(id))
+    .map(([id, course]) => ({ ...course, id }));
+
   return (
     <>
-      <Banner title={bannerTitle} />
-      <TermPage courses={data?.courses ?? {}}/>
+      <Banner title={bannerTitle} onCoursePlanClick={toggleCoursePlan} />
+      <TermPage courses={data?.courses ?? {}} selected={selected} setSelected={setSelected} />
+      {showCoursePlan && <CoursePlan selected={selectedCourses} onClose={toggleCoursePlan} />}
     </>
   );
 };

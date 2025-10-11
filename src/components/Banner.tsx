@@ -1,10 +1,14 @@
 interface BannerProps {
   title: string;
+  onCoursePlanClick: () => void;
 }
 
-const Banner = ({title}: BannerProps) => {
+const Banner = ({title, onCoursePlanClick}: BannerProps) => {
   return (
-    <h1>{title}</h1>
+    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+      <h1>{title}</h1>
+      <button onClick={onCoursePlanClick}>Course Plan</button>
+    </div>
   )
 };
 
