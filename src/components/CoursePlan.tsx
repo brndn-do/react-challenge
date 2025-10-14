@@ -1,4 +1,3 @@
-
 import './CoursePlan.css';
 
 interface Course {

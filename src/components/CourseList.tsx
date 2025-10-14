@@ -1,11 +1,6 @@
 import { useCallback } from 'react';
-
-interface Course {
-  term: string;
-  number: string;
-  meets: string;
-  title: string;
-}
+import { hasConflict } from '../utils/conflict';
+import type { Course } from '../utils/types';
 
 interface CourseListProps {
   courses: { [key: string]: Course };
@@ -29,11 +24,16 @@ const CourseList = ({ courses, term, selected, setSelected }: CourseListProps) =
     <ul>
       {filteredCourses.map(([id, course]) => {
         const isSelected = selected.includes(id);
+        const isConflicting = !isSelected && selected.some((selectedId) =>
+          hasConflict(course, courses[selectedId])
+        );
         return (
           <li
             key={id}
-            onClick={() => toggleSelected(id)}
-            className={`course-item ${isSelected ? 'selected' : ''}`}
+            onClick={() => (isSelected || !isConflicting) && toggleSelected(id)}
+            className={`course-item ${isSelected ? 'selected' : ''} ${
+              isConflicting ? 'conflicting' : ''
+            }`}
           >
             <h6 className="term-number">{`${course.term} CS ${course.number}`}</h6>
             <p className="title">{`${course.title}`}</p>
