@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { hasConflict } from '../utils/conflict';
 import type { Course } from '../utils/types';
+import { Link } from 'react-router-dom'; // Import Link
 
 interface CourseListProps {
   courses: { [key: string]: Course };
@@ -38,6 +39,7 @@ const CourseList = ({ courses, term, selected, setSelected }: CourseListProps) =
             <h6 className="term-number">{`${course.term} CS ${course.number}`}</h6>
             <p className="title">{`${course.title}`}</p>
             <p className="meets">{`${course.meets}`}</p>
+            <Link to={`/edit/${id}`} onClick={(e) => e.stopPropagation()}>Edit</Link> {/* Add Edit link */}
           </li>
         );
       })}

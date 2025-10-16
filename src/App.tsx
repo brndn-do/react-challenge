@@ -3,6 +3,8 @@ import './App.css';
 import { useState, useEffect } from 'react';
 import TermPage from './components/TermPage';
 import CoursePlan from './components/CoursePlan';
+import CourseForm from './components/CourseForm'; // Import CourseForm
+import { BrowserRouter, Routes, Route } from 'react-router-dom'; // Import routing components
 
 interface CourseData {
   title: string;
@@ -56,11 +58,18 @@ const App = () => {
     .map(([id, course]) => ({ ...course, id }));
 
   return (
-    <>
+    <BrowserRouter>
       <Banner title={bannerTitle} onCoursePlanClick={toggleCoursePlan} />
-      <TermPage courses={data?.courses ?? {}} selected={selected} setSelected={setSelected} />
-      {showCoursePlan && <CoursePlan selected={selectedCourses} onClose={toggleCoursePlan} />}
-    </>
+      <Routes>
+        <Route path="/" element={
+          <>
+            <TermPage courses={data?.courses ?? {}} selected={selected} setSelected={setSelected} />
+            {showCoursePlan && <CoursePlan selected={selectedCourses} onClose={toggleCoursePlan} />}
+          </>
+        } />
+        <Route path="/edit/:id" element={<CourseForm courses={data?.courses ?? {}} />} />
+      </Routes>
+    </BrowserRouter>
   );
 };
 
