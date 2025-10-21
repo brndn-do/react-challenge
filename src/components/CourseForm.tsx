@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useForm, type SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { Course } from '../utils/types';
+import { courseSchema } from '../utils/types';
+import { z } from 'zod';
+
+type FormValues = z.infer<typeof courseSchema>;
 
 interface CourseFormProps {
   courses: { [key: string]: Course };
@@ -9,22 +14,21 @@ interface CourseFormProps {
 const CourseForm = ({ courses }: CourseFormProps) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const initialCourse = id ? courses[id] : null;
+  const initialCourse = id ? (courses[id] as unknown as FormValues) : null;
 
-  const [title, setTitle] = useState(initialCourse?.title || '');
-  const [meets, setMeets] = useState(initialCourse?.meets || '');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(courseSchema),
+    defaultValues: initialCourse || { title: '', meets: '', term: 'Fall', number: '' },
+  });
 
-  useEffect(() => {
-    if (id && !initialCourse) {
-      // If course ID is in URL but course data not found, navigate back
-      navigate('/');
-    }
-  }, [id, initialCourse, navigate]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // No submission logic for now, as per instructions
-    console.log('Form submitted (no action taken)');
+  const onSubmit: SubmitHandler<FormValues> = (data) => {
+    console.log('Form submitted with data:', data);
+    // Here you would typically update the course data
+    navigate('/');
   };
 
   const handleCancel = () => {
@@ -38,28 +42,47 @@ const CourseForm = ({ courses }: CourseFormProps) => {
   return (
     <div className="course-form-container">
       <h2>Edit Course: {initialCourse?.term} CS {initialCourse?.number}</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div className="form-group">
           <label htmlFor="title">Course Title:</label>
           <input
             type="text"
             id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            {...register('title')}
           />
+          {errors.title && <p className="error-message">{errors.title.message}</p>}
+        </div>
+        <div className="form-group">
+          <label htmlFor="term">Term:</label>
+          <select id="term" {...register('term')}>
+            <option value="Fall">Fall</option>
+            <option value="Winter">Winter</option>
+            <option value="Spring">Spring</option>
+            <option value="Summer">Summer</option>
+          </select>
+          {errors.term && <p className="error-message">{errors.term.message}</p>}
+        </div>
+        <div className="form-group">
+          <label htmlFor="number">Course Number:</label>
+          <input
+            type="text"
+            id="number"
+            {...register('number')}
+          />
+          {errors.number && <p className="error-message">{errors.number.message}</p>}
         </div>
         <div className="form-group">
           <label htmlFor="meets">Meeting Times:</label>
           <input
             type="text"
             id="meets"
-            value={meets}
-            onChange={(e) => setMeets(e.target.value)}
+            {...register('meets')}
           />
+          {errors.meets && <p className="error-message">{errors.meets.message}</p>}
         </div>
         <div className="form-actions">
           <button type="button" onClick={handleCancel}>Cancel</button>
-          {/* No submit button as per instructions */}
+          <button type="submit">Save Course</button>
         </div>
       </form>
     </div>
