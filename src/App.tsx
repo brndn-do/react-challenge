@@ -1,10 +1,12 @@
 import Banner from './components/Banner';
 import './App.css';
 import { useState, useEffect } from 'react';
+import { ref, onValue, off, DataSnapshot } from 'firebase/database';
 import TermPage from './components/TermPage';
 import CoursePlan from './components/CoursePlan';
 import CourseForm from './components/CourseForm'; // Import CourseForm
 import { BrowserRouter, Routes, Route } from 'react-router-dom'; // Import routing components
+import { db } from './lib/firebase';
 
 interface CourseData {
   title: string;
@@ -26,16 +28,16 @@ const App = () => {
   const [selected, setSelected] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const dataRef = ref(db, '/');
+
+  const handleValue = (snapshot: DataSnapshot) => {
       try {
-        const response = await fetch(
-          'https://courses.cs.northwestern.edu/394/guides/data/cs-courses.php'
-        );
-        if (!response.ok) {
-          throw new Error(`ERROR: status: ${response.status}`);
+        const val = snapshot.val();
+        if (val == null) {
+          setError(new Error('No data available'));
+        } else {
+          setData(val as CourseData);
         }
-        const json = await response.json();
-        setData(json);
       } catch (err) {
         setError(err as Error);
       } finally {
@@ -43,7 +45,14 @@ const App = () => {
       }
     };
 
-    fetchData();
+    onValue(dataRef, handleValue, (err) => {
+      setError(err as Error);
+      setLoading(false);
+    });
+
+    return () => {
+      off(dataRef, 'value', handleValue);
+    };
   }, []);
 
   let bannerTitle = 'CS Courses';
