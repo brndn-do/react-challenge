@@ -4,6 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { Course } from '../utils/types';
 import { courseSchema } from '../utils/types';
 import { z } from 'zod';
+import { db } from '../lib/firebase';
+import { ref, set } from 'firebase/database';
 
 type FormValues = z.infer<typeof courseSchema>;
 
@@ -25,10 +27,27 @@ const CourseForm = ({ courses }: CourseFormProps) => {
     defaultValues: initialCourse || { title: '', meets: '', term: 'Fall', number: '' },
   });
 
-  const onSubmit: SubmitHandler<FormValues> = (data) => {
-    console.log('Form submitted with data:', data);
-    // Here you would typically update the course data
-    navigate('/');
+  const onSubmit: SubmitHandler<FormValues> = async (formData) => {
+    // Prevent submitting when no id is available
+    if (!id) {
+      navigate('/');
+      return;
+    }
+
+    // Do not submit if there are no changes
+    const original = initialCourse || null;
+    if (original && JSON.stringify(formData) === JSON.stringify(original)) {
+      navigate('/');
+      return;
+    }
+
+    try {
+      // Write the course data under /courses/:id
+      await set(ref(db, `courses/${id}`), formData);
+      navigate('/');
+    } catch (err) {
+      console.error('Failed to save course:', err);
+    }
   };
 
   const handleCancel = () => {
