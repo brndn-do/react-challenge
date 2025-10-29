@@ -1,13 +1,18 @@
 import Banner from './components/Banner';
 import './App.css';
 import { useState, useEffect } from 'react';
-import { ref, onValue, off, DataSnapshot } from 'firebase/database';
+import { ref, onValue, off, DataSnapshot, get, child } from 'firebase/database';
 import TermPage from './components/TermPage';
 import CoursePlan from './components/CoursePlan';
 import CourseForm from './components/CourseForm'; // Import CourseForm
 import { BrowserRouter, Routes, Route } from 'react-router-dom'; // Import routing components
 import { db, auth, googleProvider } from './lib/firebase';
-import { signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth';
+import {
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  type User,
+} from 'firebase/auth';
 
 interface CourseData {
   title: string;
@@ -28,11 +33,12 @@ const App = () => {
   const [showCoursePlan, setShowCoursePlan] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
     const dataRef = ref(db, '/');
 
-  const handleValue = (snapshot: DataSnapshot) => {
+    const handleValue = (snapshot: DataSnapshot) => {
       try {
         const val = snapshot.val();
         if (val == null) {
@@ -58,13 +64,30 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      setUser(u);
+      if (u) {
+        try {
+          const adminRef = child(ref(db, 'admins'), u.uid);
+          const snap = await get(adminRef);
+          if (snap.exists()) {
+            setIsAdmin(true);
+          }
+        } catch (err) {
+          console.error('Failed to read admin flag', err);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    });
     return () => unsub();
   }, []);
 
   const handleSignIn = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
+      console.log('handleSignIn called');
     } catch (err) {
       console.error('Sign-in failed', err);
     }
@@ -73,6 +96,7 @@ const App = () => {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
+      console.log('handleSignOut called');
     } catch (err) {
       console.error('Sign-out failed', err);
     }
@@ -95,17 +119,34 @@ const App = () => {
         title={bannerTitle}
         onCoursePlanClick={toggleCoursePlan}
         user={user}
+        isAdmin={isAdmin}
         onSignIn={handleSignIn}
         onSignOut={handleSignOut}
       />
       <Routes>
-        <Route path="/" element={
-          <>
-            <TermPage courses={data?.courses ?? {}} selected={selected} setSelected={setSelected} isAuthenticated={!!user} />
-            {showCoursePlan && <CoursePlan selected={selectedCourses} onClose={toggleCoursePlan} />}
-          </>
-        } />
-        <Route path="/edit/:id" element={<CourseForm courses={data?.courses ?? {}} />} />
+        <Route
+          path="/"
+          element={
+            <>
+              <TermPage
+                courses={data?.courses ?? {}}
+                selected={selected}
+                setSelected={setSelected}
+                isAdmin={isAdmin}
+              />
+              {showCoursePlan && (
+                <CoursePlan
+                  selected={selectedCourses}
+                  onClose={toggleCoursePlan}
+                />
+              )}
+            </>
+          }
+        />
+        <Route
+          path="/edit/:id"
+          element={<CourseForm courses={data?.courses ?? {}} />}
+        />
       </Routes>
     </BrowserRouter>
   );

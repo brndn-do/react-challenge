@@ -8,10 +8,10 @@ interface CourseListProps {
   term: string;
   selected: string[];
   setSelected: (selected: string[]) => void;
-  isAuthenticated?: boolean;
+  isAdmin?: boolean;
 }
 
-const CourseList = ({ courses, term, selected, setSelected, isAuthenticated }: CourseListProps) => {
+const CourseList = ({ courses, term, selected, setSelected, isAdmin }: CourseListProps) => {
   const toggleSelected = useCallback((id: string) => {
     setSelected(
       selected.includes(id)
@@ -40,7 +40,7 @@ const CourseList = ({ courses, term, selected, setSelected, isAuthenticated }: C
             <h6 className="term-number">{`${course.term} CS ${course.number}`}</h6>
             <p className="title">{`${course.title}`}</p>
             <p className="meets">{`${course.meets}`}</p>
-            {isAuthenticated && (
+            {isAdmin && (
               <Link to={`/edit/${id}`} onClick={(e) => e.stopPropagation()}>Edit</Link>
             )}
           </li>

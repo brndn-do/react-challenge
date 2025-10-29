@@ -4,11 +4,12 @@ interface BannerProps {
   title: string;
   onCoursePlanClick: () => void;
   user?: User | null;
+  isAdmin?: boolean;
   onSignIn?: () => void;
   onSignOut?: () => void;
 }
 
-const Banner = ({ title, onCoursePlanClick, user, onSignIn, onSignOut }: BannerProps) => {
+const Banner = ({ title, onCoursePlanClick, user, isAdmin, onSignIn, onSignOut }: BannerProps) => {
   return (
     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
       <h1>{title}</h1>
@@ -17,6 +18,7 @@ const Banner = ({ title, onCoursePlanClick, user, onSignIn, onSignOut }: BannerP
         {user ? (
           <>
             <span>{user.displayName ?? user.email}</span>
+            {isAdmin && <span style={{fontWeight: 600, color: '#0a74ff', marginLeft: 8}}>Admin</span>}
             <button onClick={onSignOut}>Sign Out</button>
           </>
         ) : (
