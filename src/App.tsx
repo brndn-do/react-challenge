@@ -6,7 +6,8 @@ import TermPage from './components/TermPage';
 import CoursePlan from './components/CoursePlan';
 import CourseForm from './components/CourseForm'; // Import CourseForm
 import { BrowserRouter, Routes, Route } from 'react-router-dom'; // Import routing components
-import { db } from './lib/firebase';
+import { db, auth, googleProvider } from './lib/firebase';
+import { signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth';
 
 interface CourseData {
   title: string;
@@ -26,6 +27,7 @@ const App = () => {
   const [error, setError] = useState<Error | null>(null);
   const [showCoursePlan, setShowCoursePlan] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const dataRef = ref(db, '/');
@@ -55,6 +57,27 @@ const App = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsub();
+  }, []);
+
+  const handleSignIn = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      console.error('Sign-in failed', err);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error('Sign-out failed', err);
+    }
+  };
+
   let bannerTitle = 'CS Courses';
   if (loading) bannerTitle = 'Loading...';
   else if (error) bannerTitle = `Error: ${error.message}`;
@@ -68,11 +91,17 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <Banner title={bannerTitle} onCoursePlanClick={toggleCoursePlan} />
+      <Banner
+        title={bannerTitle}
+        onCoursePlanClick={toggleCoursePlan}
+        user={user}
+        onSignIn={handleSignIn}
+        onSignOut={handleSignOut}
+      />
       <Routes>
         <Route path="/" element={
           <>
-            <TermPage courses={data?.courses ?? {}} selected={selected} setSelected={setSelected} />
+            <TermPage courses={data?.courses ?? {}} selected={selected} setSelected={setSelected} isAuthenticated={!!user} />
             {showCoursePlan && <CoursePlan selected={selectedCourses} onClose={toggleCoursePlan} />}
           </>
         } />
